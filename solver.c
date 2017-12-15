@@ -6,15 +6,18 @@
 /*   By: mbrown <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/10 14:06:39 by mbrown            #+#    #+#             */
-/*   Updated: 2017/12/13 21:13:53 by mbrown           ###   ########.fr       */
+/*   Updated: 2017/12/14 18:14:28 by mbrown           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
+int			g_iter = 0;
 char		*g_boardcopy;
+int			g_boardisfull = 0;
 
 char	*boardgen(int size, char *board)
 {
@@ -104,44 +107,63 @@ void	boardreset(char *board, int size)
 	board[iter] = '\0';
 }
 
-int		boardfull(char *board, int size)
+int		boardfull(char *board, int numtets)
 {
-	int	i;
-	
+	int i;
+	int j;
+	int k;
+
 	i = 0;
-	g_boardcopy = malloc(sizeof(int *) * (size * size) + (size));
-	g_boardcopy = board;
-	while (i < (size * size) + size)
+	j = 0;
+	while (board[i] != '\0')
 	{
-		if (g_boardcopy[i] == '.')
-			return (0);
+		k = 1;
+		while (k <= numtets)
+		{
+			if (board[i] == k + 'A')
+				j++;
+			k++;
+		}
 		i++;
 	}
+	if (j != numtets * 4)
+		return (-1);
 	return (1);
 }
 
-int		backtrack(int pieces[4][4], int startpos, char *board, int tetnum, int placed)
+void	ft_putchar(char c)
 {
-	//if (boardfull(board, 4) != 1)
-	//	return (1);
-	if (placed == 4)
+	write(1, &c, 1);
+}
+
+void	ft_putstr(char *str)
+{
+	while (*str)
+		ft_putchar(*str++);
+}
+
+int		backtrack(int pieces[8][4], int startpos, char *board, int tetnum, int placed)
+{
+	ft_putstr(board);
+	printf("%i\n", ++g_iter);
+	if (placed == 8)
 		return (1);
 	if (board[startpos + 1] == '\0')
 		return (-1);
 	if (board[startpos] != '.')
 		return (backtrack(pieces, startpos + 1, board, tetnum, placed));
-	if (tetnum == 4)
+	if (tetnum == 8)
 		return (backtrack(pieces, startpos + 1, board, 0, placed));
-	while (tetnum < 4)
+	while (tetnum < 8)
 	{
-		if (check(pieces[tetnum], startpos, board, tetnum, 4) != 0)
+		if (check(pieces[tetnum], startpos, board, tetnum, 6) != 0)
 		{
 			if (backtrack(pieces, 0, board, 0, placed + 1) < 0)
-				return (0);
+				return (-1);
 		}
 		tetnum++;
 	}
-	boardreset(board, 4);
+	boardreset(board, 6);
 	return (0);
 }
 
@@ -169,22 +191,21 @@ int		backtrack(int pieces[4][4], int startpos, char *board, int tetnum, int plac
 int main(void)
 {
 	char	*board;
-//	int		pieces[8][4] = {{0,4,8,12},
-//							{0,1,2,3},
-//							{0,1,2,6},
-//							{2,3,6,5},
-//							{0,1,4,5},
-//							{0,1,5,6},
-//							{0,1,5,9},
-//							{0,1,2,5}};
-	int		pieces[4][4] = {{0,1,5,9},
-							{0,4,5,6},
+	int		pieces[8][4] = {{0,4,8,12},
+							{0,1,2,3},
+							{0,1,2,6},
+							{2,3,6,5},
+							{0,1,4,5},
 							{0,1,5,6},
-							{0,1,2,3}};
+							{0,1,5,9},
+							{0,1,2,5}};
+//	int		pieces[4][4] = {{0,1,5,9},
+//							{0,4,5,6},
+//							{0,1,5,6},
+//							{0,1,2,3}};
 //	int		pieces[2][4] = {{0,4,8,12},
 //								{0,1,4,5}};
-	board = boardgen(4, NULL);
+	board = boardgen(6, NULL);
 	backtrack(pieces, 0, board, 0, 0);
-	printf("%s",  board);
 	return (0);
 }
